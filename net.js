@@ -1,10 +1,13 @@
 var net = {
     alphabetSize: 10,
-    hiddenLayerSize: 10,
+    hiddenLayerSize: 15,
     initialWeightAbsMax: 0.2,
-    imgWidth: 6,
-    imgHeight: 10,
-    eta: 0.1,
+    imgWidth: 20,
+    imgHeight: 30,
+    eta: 0.4,
+    sigmoid: function(x){
+        return 1/(1 + Math.exp(-x));
+    },
     init: function(){
         this.weights1 = [];//from layer 0 to layer 1
         for(var i = 0; i < this.imgWidth*this.imgHeight; i++){
@@ -31,37 +34,40 @@ var net = {
             for(var j = 0; j < this.imgWidth*this.imgHeight; j++){
                 out1[i] += this.weights1[j][i] * vector[j];
             }
-            if(out1[i] >= 0){
-                out1[i] = 1;
-            } else {
-                out1[i] = -1;
-            }
+            out1[i] = Math.round(this.sigmoid(out1[i]));
         }
-        //console.log(out1);
+        console.log(out1);
         var out2 = [];
         for(var i = 0; i < this.imgWidth*this.imgHeight; i++){
             out2[i] = 0;
             for(var j = 0; j < this.hiddenLayerSize; j++){
                 out2[i] += this.weights2[j][i] * out1[j];
             }
-            if(out2[i] >= 0){
-                out2[i] = 1;
-            } else {
-                out2[i] = -1;
-            }
+            out2[i] = this.sigmoid(out2[i]);
         }
         var context = document.getElementById('out').getContext('2d');
         context.mozImageSmoothingEnabled = false;
         context.clearRect(0, 0, this.imgWidth, this.imgHeight);
         for( var i = 0; i < this.imgWidth*this.imgHeight; i++){
-            if(out2[i]==1){
+            if(out2[i] > 0.5){
                 context.fillRect(i % this.imgWidth, Math.floor(i/this.imgWidth), 1, 1);
             }
         }
+        var deltas = [];
         for(var i = 0; i < this.imgWidth*this.imgHeight; i++){
-            var delta = vector[i] - out2[i];
+            deltas[i] = (vector[i] - out2[i]) * out2[i] * (1 - out2[i]);
             for(var j = 0; j < this.hiddenLayerSize; j++){
-                this.weights2[j][i] += delta * out1[j] * this.eta;
+                this.weights2[j][i] += deltas[i] * out1[j] * this.eta;
+            }
+        }
+        for(var i = 0; i < this.hiddenLayerSize; i++){
+            var delta = 0;
+            for(var j = 0; j < this.imgWidth*this.imgHeight; j++){
+                delta += deltas[j] * this.weights2[i][j];
+            }
+            delta *= out1[i] * (1 - out1[i]);
+            for(var j = 0; j < this.imgWidth*this.imgHeight; j++){
+                this.weights1[j][i] += delta * vector[j] * this.eta;
             }
         }
         //console.log(this.weights2);
@@ -70,7 +76,7 @@ var net = {
 
 
 function makeImage(n, img){
-    img.src = n+'.png';
+    img.src = n+'a.png';
     img.onload = function(){
         var canvas = $('<canvas/>', {
             id: 'number'+n,
@@ -87,8 +93,8 @@ function makeImage(n, img){
             for(var h = 0; h < net.imgHeight; h++){
                 matrix[h]=[];
                 for(var w = 0; w < net.imgWidth; w++){
-                    vector[h*net.imgWidth + w] = 1 - 2*context.getImageData(w, h, 1, 1).data[0] / 255;
-                    matrix[h][w] = 1 - 2*context.getImageData(w, h, 1, 1).data[0] / 255;
+                    vector[h*net.imgWidth + w] = 1 - context.getImageData(w, h, 1, 1).data[0] / 255;
+                    matrix[h][w] = 1 - context.getImageData(w, h, 1, 1).data[0] / 255;
                 }
             }
             //console.log(matrix);
