@@ -1,9 +1,9 @@
 var net = {
     alphabetSize: 10,
-    hiddenLayerSize: 5,
+    hiddenLayerSize: 15,
     initialWeightAbsMax: 0.2,
-    imgWidth: 3,
-    imgHeight: 5,
+    imgWidth: 20,
+    imgHeight: 30,
     eta: 0.4,
     sigmoid: function(x){
         return 1/(1 + Math.exp(-x));
@@ -34,7 +34,7 @@ var net = {
             for(var j = 0; j < this.imgWidth*this.imgHeight; j++){
                 out1[i] += this.weights1[j][i] * vector[j];
             }
-            out1[i] = this.sigmoid(out1[i]);
+            out1[i] = Math.round(this.sigmoid(out1[i]));
         }
         console.log(out1);
         var out2 = [];
@@ -70,12 +70,13 @@ var net = {
                 this.weights1[j][i] += delta * vector[j] * this.eta;
             }
         }
+        //console.log(this.weights2);
     }
 };
 
 
 function makeImage(n, img){
-    img.src = n+'.png';
+    img.src = n+'a.png';
     img.onload = function(){
         var canvas = $('<canvas/>', {
             id: 'number'+n,
