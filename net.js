@@ -1,10 +1,10 @@
 var net = {
     alphabetSize: 10,
-    hiddenLayerSize: 10,
+    hiddenLayerSize: 5,
     initialWeightAbsMax: 0.2,
-    imgWidth: 6,
-    imgHeight: 10,
-    eta: 0.1,
+    imgWidth: 9,
+    imgHeight: 15,
+    eta: 0.05,
     init: function(){
         this.weights1 = [];//from layer 0 to layer 1
         for(var i = 0; i < this.imgWidth*this.imgHeight; i++){
@@ -58,12 +58,24 @@ var net = {
                 context.fillRect(i % this.imgWidth, Math.floor(i/this.imgWidth), 1, 1);
             }
         }
+        var deltas1 = [];
+        for(var i = 0; i < this.hiddenLayerSize; i++){
+            deltas1[i] = 0;
+        }
+        var deltas2 = [];
         for(var i = 0; i < this.imgWidth*this.imgHeight; i++){
-            var delta = vector[i] - out2[i];
+            deltas2[i] = vector[i] - out2[i];
             for(var j = 0; j < this.hiddenLayerSize; j++){
-                this.weights2[j][i] += delta * out1[j] * this.eta;
+                deltas1[j] += deltas2[i] * this.weights2[j][i];
+                this.weights2[j][i] += deltas2[i] * out1[j] * this.eta;
             }
         }
+        for(var i = 0; i < this.hiddenLayerSize; i++){
+            for(var j = 0; j < this.imgWidth*this.imgHeight; j++){
+                this.weights1[j][i] += deltas1[i] * vector[j] * this.eta;
+            }
+        }
+        //console.log(this.weights1);
         //console.log(this.weights2);
     }
 };
